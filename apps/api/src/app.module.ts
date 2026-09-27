@@ -10,9 +10,10 @@ import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { TasksModule } from './tasks/tasks.module';
 import { UserModule } from './users/user.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, AccessControlModule, UserModule, TasksModule],
+  imports: [PrismaModule, AuthModule, AccessControlModule, UserModule, TasksModule, CategoriesModule],
   controllers: [HealthController],
   providers: [
     ErrorMonitoringService,

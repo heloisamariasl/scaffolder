@@ -26,4 +26,6 @@ export interface UpdateTaskDto {
   priority?: UpdateTaskDtoPriority;
   /** Data de entrega limite (ISO 8601) */
   dueDate?: string;
+  /** Identificador da categoria (envie null para remover a categoria) */
+  categoryId?: string;
 }

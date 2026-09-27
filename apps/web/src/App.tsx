@@ -13,7 +13,7 @@ import { LoginPage } from './pages/login-page';
 import { ProfilePage } from './pages/profile-page';
 import { TasksPage } from './pages/tasks-page';
 import { UsersPage } from './pages/users-page';
-
+import { CategoriesPage } from './pages/categories-page';
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
@@ -57,6 +57,7 @@ export function App() {
               >
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/tasks" element={<TasksPage />} />
+                <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route
                   path="/users"

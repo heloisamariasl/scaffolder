@@ -5,10 +5,12 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
 import { PaginationMetaDto, PaginationQueryDto } from '../common/dto/pagination.dto';
+import { CategoryDto } from '../categories/category.dto';
 
 export enum TaskStatusEnum {
   PENDING = 'PENDING',
@@ -47,6 +49,11 @@ export class CreateTaskDto {
   @IsOptional()
   @IsDateString({}, { message: 'Data de entrega limite deve ser uma string ISO válida.' })
   dueDate?: string;
+
+  @ApiPropertyOptional({ description: 'Identificador da categoria', example: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22' })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 }
 
 export class UpdateTaskDto {
@@ -77,6 +84,11 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsDateString({}, { message: 'Data de entrega limite deve ser uma string ISO válida.' })
   dueDate?: string;
+
+  @ApiPropertyOptional({ description: 'Identificador da categoria (envie null para remover a categoria)', example: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22' })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 }
 
 export class TaskOwnerDto {
@@ -115,6 +127,12 @@ export class TaskDto {
   @ApiPropertyOptional({ description: 'Dados resumidos do proprietário', type: () => TaskOwnerDto })
   owner?: TaskOwnerDto;
 
+  @ApiPropertyOptional({ description: 'Identificador da categoria', nullable: true })
+  categoryId!: string | null;
+
+  @ApiPropertyOptional({ description: 'Dados da categoria', type: () => CategoryDto })
+  category?: CategoryDto;
+
   @ApiProperty({ description: 'Data de criação' })
   createdAt!: string;
 
@@ -140,6 +158,11 @@ export class ListTasksQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsEnum(TaskPriorityEnum)
   priority?: TaskPriorityEnum;
+
+  @ApiPropertyOptional({ description: 'Filtro por categoria', example: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22' })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 
   @ApiPropertyOptional({ description: 'Campo de ordenação', enum: ['createdAt', 'dueDate', 'title', 'priority', 'status'], default: 'createdAt' })
   @IsOptional()

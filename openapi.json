@@ -904,6 +904,16 @@
             }
           },
           {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Filtro por categoria",
+            "schema": {
+              "example": "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
+              "type": "string"
+            }
+          },
+          {
             "name": "sortBy",
             "required": false,
             "in": "query",
@@ -1175,6 +1185,228 @@
         "summary": "Excluir tarefa (remoção lógica)",
         "tags": [
           "tasks"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "post": {
+        "operationId": "CategoriesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoria criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe categoria com esse nome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Criar nova categoria",
+        "tags": [
+          "categories"
+        ]
+      },
+      "get": {
+        "operationId": "CategoriesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de categorias",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar todas as categorias",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "get": {
+        "operationId": "CategoriesController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados da categoria",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obter detalhes de uma categoria",
+        "tags": [
+          "categories"
+        ]
+      },
+      "put": {
+        "operationId": "CategoriesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Categoria atualizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualizar categoria",
+        "tags": [
+          "categories"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoriesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Categoria excluída com sucesso"
+          },
+          "404": {
+            "description": "Categoria não encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Excluir categoria",
+        "tags": [
+          "categories"
         ]
       }
     }
@@ -1519,6 +1751,11 @@
             "type": "string",
             "description": "Data de entrega limite (ISO 8601)",
             "example": "2026-12-31T23:59:59.000Z"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Identificador da categoria",
+            "example": "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22"
           }
         },
         "required": [
@@ -1548,6 +1785,38 @@
           "id",
           "name",
           "email"
+        ]
+      },
+      "CategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único da categoria"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome da categoria"
+          },
+          "color": {
+            "type": "string",
+            "description": "Cor em hexadecimal"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Data de criação"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Data de última atualização"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "TaskDto": {
@@ -1605,6 +1874,19 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/TaskOwnerDto"
+              }
+            ]
+          },
+          "categoryId": {
+            "type": "object",
+            "description": "Identificador da categoria",
+            "nullable": true
+          },
+          "category": {
+            "description": "Dados da categoria",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryDto"
               }
             ]
           },
@@ -1689,6 +1971,47 @@
           "dueDate": {
             "type": "string",
             "description": "Data de entrega limite (ISO 8601)"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Identificador da categoria (envie null para remover a categoria)",
+            "example": "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22"
+          }
+        }
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome da categoria",
+            "example": "Trabalho",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "description": "Cor em hexadecimal",
+            "example": "#3B82F6",
+            "default": "#3B82F6"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome da categoria",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "color": {
+            "type": "string",
+            "description": "Cor em hexadecimal"
           }
         }
       }

@@ -25,12 +25,14 @@ import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { ActionFeedback, EmptyState, ErrorState, LoadingState } from '../components/ui/state-feedback';
 import {
+  categoriesControllerFindAll,
   tasksControllerCreate,
   tasksControllerFindAll,
   tasksControllerRemove,
   tasksControllerUpdate,
 } from '../lib/api-client';
 import type {
+  CategoryDto,
   PaginatedTasksResponseDto,
   TaskDto,
   TaskDtoPriority,
@@ -45,6 +47,7 @@ const taskFormSchema = z.object({
   description: z.string().max(1000, 'Máximo de 1000 caracteres.').optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   dueDate: z.string().optional(),
+  categoryId: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -84,6 +87,15 @@ export function TasksPage() {
     setSearchParams(updated);
   };
 
+  // Fetch Categories (for the select inputs)
+  const { data: categoriesList } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await categoriesControllerFindAll();
+      return res.data as CategoryDto[];
+    },
+  });
+
   // Fetch Tasks with TanStack Query
   const { data: response, isLoading, isError, refetch } = useQuery({
     queryKey: ['tasks', { page, search, statusFilter, priorityFilter, sortBy, sortOrder }],
@@ -121,6 +133,7 @@ export function TasksPage() {
       description: '',
       priority: 'MEDIUM',
       dueDate: '',
+      categoryId: '',
     },
   });
 
@@ -131,6 +144,7 @@ export function TasksPage() {
         description: data.description || undefined,
         priority: data.priority as any,
         dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+        categoryId: data.categoryId || undefined,
       });
       return res.data;
     },
@@ -166,6 +180,7 @@ export function TasksPage() {
         priority?: TaskDtoPriority;
         status?: TaskDtoStatus;
         dueDate?: string;
+        categoryId?: string;
       };
     }) => {
       const res = await tasksControllerUpdate(id, data as any);
@@ -381,6 +396,18 @@ export function TasksPage() {
                           {desc}
                         </p>
                       )}
+
+                      {task.category && (
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: task.category.color }}
+                          />
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            {task.category.name}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
@@ -571,6 +598,23 @@ export function TasksPage() {
                 />
               </div>
 
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Categoria
+                </label>
+                <select
+                  {...registerCreate('categoryId')}
+                  className="flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  <option value="">Sem categoria</option>
+                  {categoriesList?.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
@@ -593,6 +637,7 @@ export function TasksPage() {
       {editingTask && (
         <EditTaskModal
           task={editingTask}
+          categoriesList={categoriesList}
           onClose={() => setEditingTask(null)}
           onSubmit={(data) => {
             setFeedback(null);
@@ -607,11 +652,13 @@ export function TasksPage() {
 
 function EditTaskModal({
   task,
+  categoriesList,
   onClose,
   onSubmit,
   isLoading,
 }: {
   task: TaskDto;
+  categoriesList?: CategoryDto[];
   onClose: () => void;
   onSubmit: (data: EditTaskFormValues) => void;
   isLoading: boolean;
@@ -632,6 +679,8 @@ function EditTaskModal({
       priority: task.priority as any,
       status: task.status as any,
       dueDate: rawDue,
+      categoryId:
+  typeof task.categoryId === 'string' ? task.categoryId : '',
     },
   });
 
@@ -669,6 +718,7 @@ function EditTaskModal({
               priority: data.priority,
               status: data.status,
               dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+              categoryId: data.categoryId || undefined,
             });
           })}
           className="space-y-4"
@@ -732,6 +782,24 @@ function EditTaskModal({
             {...register('dueDate')}
             error={errors.dueDate?.message}
           />
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Categoria
+            </label>
+            <select
+              disabled={isCompleted}
+              {...register('categoryId')}
+              className="flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Sem categoria</option>
+              {categoriesList?.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <Button type="button" variant="outline" size="sm" onClick={onClose}>

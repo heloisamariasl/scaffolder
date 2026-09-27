@@ -20,6 +20,17 @@ interface UserContext {
   role: string;
 }
 
+const taskIncludeRelations = {
+  owner: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
+  category: true,
+};
+
 @Injectable()
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
@@ -35,23 +46,23 @@ export class TasksService {
       }
     }
 
+    if (dto.categoryId) {
+      const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
+      if (!category) {
+        throw new BadRequestException('Categoria informada não existe.');
+      }
+    }
+
     const created = await this.prisma.task.create({
       data: {
         title: dto.title.trim(),
         description: dto.description?.trim() || null,
         priority: (dto.priority as TaskPriorityEnum) || TaskPriorityEnum.MEDIUM,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+        categoryId: dto.categoryId || null,
         ownerId,
       },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+      include: taskIncludeRelations,
     });
 
     return this.serializeTask(created);
@@ -87,6 +98,10 @@ export class TasksService {
       where.priority = query.priority;
     }
 
+    if (query.categoryId) {
+      where.categoryId = query.categoryId;
+    }
+
     const allowedSortFields = ['createdAt', 'dueDate', 'title', 'priority', 'status'];
     const sortBy = allowedSortFields.includes(query.sortBy || '') ? query.sortBy! : 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
@@ -98,15 +113,7 @@ export class TasksService {
         skip,
         take: pageSize,
         orderBy: { [sortBy]: sortOrder },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
+        include: taskIncludeRelations,
       }),
     ]);
 
@@ -129,15 +136,7 @@ export class TasksService {
         id,
         deletedAt: null,
       },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+      include: taskIncludeRelations,
     });
 
     if (!task) {
@@ -174,7 +173,8 @@ export class TasksService {
       (dto.title !== undefined && dto.title !== existing.title) ||
       (dto.description !== undefined && dto.description !== existing.description) ||
       (dto.priority !== undefined && dto.priority !== existing.priority) ||
-      (dto.dueDate !== undefined);
+      (dto.dueDate !== undefined) ||
+      (dto.categoryId !== undefined && dto.categoryId !== existing.categoryId);
 
     if (isAlreadyCompleted && !isReopening && hasFieldChanges) {
       throw new BadRequestException(
@@ -192,6 +192,13 @@ export class TasksService {
       }
     }
 
+    if (dto.categoryId) {
+      const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
+      if (!category) {
+        throw new BadRequestException('Categoria informada não existe.');
+      }
+    }
+
     const updated = await this.prisma.task.update({
       where: { id },
       data: {
@@ -200,16 +207,9 @@ export class TasksService {
         ...(dto.status !== undefined ? { status: dto.status as TaskStatusEnum } : {}),
         ...(dto.priority !== undefined ? { priority: dto.priority as TaskPriorityEnum } : {}),
         ...(dto.dueDate !== undefined ? { dueDate: dto.dueDate ? new Date(dto.dueDate) : null } : {}),
+        ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId || null } : {}),
       },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
+      include: taskIncludeRelations,
     });
 
     return this.serializeTask(updated);
@@ -254,6 +254,16 @@ export class TasksService {
             id: task.owner.id,
             name: task.owner.name,
             email: task.owner.email,
+          }
+        : undefined,
+      categoryId: task.categoryId,
+      category: task.category
+        ? {
+            id: task.category.id,
+            name: task.category.name,
+            color: task.category.color,
+            createdAt: new Date(task.category.createdAt).toISOString(),
+            updatedAt: new Date(task.category.updatedAt).toISOString(),
           }
         : undefined,
       createdAt: new Date(task.createdAt).toISOString(),

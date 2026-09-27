@@ -10,10 +10,12 @@ import {
   Menu,
   Search,
   Shield,
+  Tag,
   User,
   Users,
   X,
 } from 'lucide-react';
+
 import { useAuth } from '../../context/auth-context';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { UserDropdown } from '../ui/user-dropdown';
@@ -77,11 +79,17 @@ export function AuthLayout() {
     {
       heading: 'Módulos',
       items: [
-        {
+               {
           label: 'Tarefas (CRUD)',
           path: '/tasks',
           icon: <ListTodo className="h-4 w-4 shrink-0" />,
           badge: 'Ref',
+        },
+        {
+          label: 'Categorias',
+          path: '/categories',
+          icon: <Tag className="h-4 w-4 shrink-0" />,
+          badge: null,
         },
         ...(isAdmin
           ? [
